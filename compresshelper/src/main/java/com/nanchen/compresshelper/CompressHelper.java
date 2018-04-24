@@ -3,6 +3,7 @@ package com.nanchen.compresshelper;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Environment;
 
 import java.io.File;
 
@@ -47,6 +48,7 @@ public class CompressHelper {
 
     /**
      * 存储路径
+     * 默认 Environment.DIRECTORY_PICTURES
      */
     private String destinationDirectoryPath;
     /**
@@ -69,10 +71,21 @@ public class CompressHelper {
         return INSTANCE;
     }
 
+    public CompressHelper setBaseConfig(float maxWidth, float maxHeight, long maxSize, int quality) {
+        this.maxSize = maxSize;
+        this.maxWidth = maxWidth;
+        this.maxHeight = maxHeight;
+        this.quality = quality;
+
+        return this;
+    }
+
 
     private CompressHelper(Context context) {
         this.context = context;
-        destinationDirectoryPath = context.getCacheDir().getPath() + File.pathSeparator + FileUtil.FILES_PATH;
+        //destinationDirectoryPath = context.getCacheDir().getPath() + File.pathSeparator + FileUtil.FILES_PATH;
+        destinationDirectoryPath =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
     }
 
     /**
