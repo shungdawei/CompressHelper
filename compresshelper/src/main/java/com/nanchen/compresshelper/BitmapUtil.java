@@ -198,30 +198,49 @@ public class BitmapUtil {
     static File compressImage(Context context, Uri imageUri, float maxWidth, float maxHeight, long maxSize,
                               Bitmap.CompressFormat compressFormat, Bitmap.Config bitmapConfig,
                               int quality, String parentPath, String prefix, String fileName) {
-        FileOutputStream out = null;
-        ByteArrayOutputStream baos = null;
-        ByteArrayInputStream bais = null;
         String filename = generateFilePath(context, parentPath, imageUri, compressFormat.name().toLowerCase(), prefix, fileName);
         try {
-            out = new FileOutputStream(filename);
             // 通过文件名写入
             Bitmap newBmp = BitmapUtil.getScaledBitmap(context, imageUri, maxWidth, maxHeight, bitmapConfig);
             if (newBmp != null) {
-                //newBmp.compress(compressFormat, quality, out);
+                return compressToFile(newBmp, maxSize, compressFormat, bitmapConfig, quality, filename);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return new File(filename);
+    }
+
+    static File compressToFile(Bitmap bitmap, long maxSize,
+                               Bitmap.CompressFormat compressFormat, Bitmap.Config bitmapConfig,
+                               int quality, String fileName) {
+        FileOutputStream out = null;
+        ByteArrayOutputStream baos = null;
+        ByteArrayInputStream bais = null;
+        try {
+            out = new FileOutputStream(fileName);
+            if (compressFormat.equals(Bitmap.CompressFormat.PNG)) {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            } else {
                 baos = new ByteArrayOutputStream();
-                newBmp.compress(compressFormat, quality, baos);
+                bitmap.compress(compressFormat, quality, baos);
                 while (baos.toByteArray().length / 1024 > maxSize) {
                     baos.reset();
                     quality -= 5;
-                    newBmp.compress(compressFormat, quality, baos);
+                    // 如果质量小于0，采用默认质量
+                    if (quality <= 0) {
+                        bitmap.compress(compressFormat, 80, baos);
+                        break;
+                    } else {
+                        bitmap.compress(compressFormat, quality, baos);
+                    }
                 }
 
                 bais = new ByteArrayInputStream(baos.toByteArray());
-                Bitmap bitmap = BitmapFactory.decodeStream(bais);
-
-                bitmap.compress(compressFormat, quality, out);
+                Bitmap newBmp = BitmapFactory.decodeStream(bais);
+                newBmp.compress(compressFormat, quality, out);
             }
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
@@ -240,9 +259,9 @@ public class BitmapUtil {
             } catch (IOException ignored) {
             }
         }
-
-        return new File(filename);
+        return new File(fileName);
     }
+
 
     private static String generateFilePath(Context context, String parentPath, Uri uri,
                                            String extension, String prefix, String fileName) {

@@ -1,9 +1,11 @@
 package com.nanchen.compressimage;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -13,11 +15,14 @@ import android.widget.Toast;
 
 import com.nanchen.compresshelper.CompressHelper;
 import com.nanchen.compresshelper.FileUtil;
+import com.nanchen.compresshelper.Watermark;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Random;
+
+import static com.nanchen.compresshelper.CompressHelper.getDefault;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,25 +56,29 @@ public class MainActivity extends AppCompatActivity {
     public void compress(View view) {
         // 默认的压缩方法，多张图片只需要直接加入循环即可
 
-        CompressHelper compressHelper = CompressHelper.getDefault(getApplicationContext()).setBaseConfig(720f, 960f, 30, 80);
+        CompressHelper compressHelper = getDefault(getApplicationContext()).setBaseConfig(720f, 960f, 30, 80);
 
         newFile = compressHelper.compressToFile(oldFile);
-
-
 //        String yourFileName = "123.jpg";
-//
-//        // 你也可以自定义压缩
-//        newFile = new CompressHelper.Builder(this)
-//                .setMaxWidth(720)  // 默认最大宽度为720
-//                .setMaxHeight(960) // 默认最大高度为960
-//                .setQuality(80)    // 默认压缩质量为80
-//                .setMaxSize(30)    // 默认压缩大小为100KB
-//                .setCompressFormat(Bitmap.CompressFormat.JPEG) // 设置默认压缩为jpg格式
-//                .setFileName(System.currentTimeMillis() + "_compress") // 设置你的文件名
-//                .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
-//                        Environment.DIRECTORY_PICTURES).getAbsolutePath())
-//                .build()
-//                .compressToFile(oldFile);
+        Watermark watermark = new Watermark();
+        watermark.setText("姓名：张三德\n编号：100001\n2018-4-24 15:33:20");
+        watermark.setTextColor(Color.RED);
+        watermark.setTextSize(20);
+        watermark.setTop(26);
+        watermark.setLeft(26);
+
+        // 你也可以自定义压缩
+        newFile = new CompressHelper.Builder(this)
+                .setMaxWidth(480)  // 默认最大宽度为720
+                .setMaxHeight(800) // 默认最大高度为960
+                .setQuality(80)    // 默认压缩质量为80
+                .setMaxSize(50)    // 默认压缩大小为100KB
+                .setCompressFormat(Bitmap.CompressFormat.JPEG) // 设置默认压缩为jpg格式
+                .setFileName(System.currentTimeMillis() + "_wm") // 设置你的文件名
+                .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                .build()
+                .compressToFileWithWatermark(oldFile, watermark);
 
         mImageNew.setImageBitmap(BitmapFactory.decodeFile(newFile.getAbsolutePath()));
 

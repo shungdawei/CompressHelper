@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
+import android.text.TextUtils;
 
 import java.io.File;
 
@@ -95,6 +96,29 @@ public class CompressHelper {
      * @return 压缩后的文件
      */
     public File compressToFile(File file) {
+        return BitmapUtil.compressImage(context, Uri.fromFile(file), maxWidth, maxHeight, maxSize,
+                compressFormat, bitmapConfig, quality, destinationDirectoryPath,
+                fileNamePrefix, fileName);
+    }
+
+    /**
+     * 压缩成文件
+     *
+     * @param file 原始文件
+     * @return 压缩后的文件
+     */
+    public File compressToFileWithWatermark(File file, Watermark watermark) {
+        if (watermark != null) {
+            Bitmap bitmap = BitmapUtil.getScaledBitmap(context, Uri.fromFile(file), maxWidth, maxHeight, bitmapConfig);
+            Bitmap waterbmp = WatermarkUtil.drawTextToLeftTop(bitmap,
+                    watermark.getText(),
+                    watermark.getTextSize(),
+                    watermark.getTextColor(), watermark.getLeft(), watermark.getTop());
+
+            String filename = generateFilePath(context, destinationDirectoryPath, Uri.fromFile(file), compressFormat.name().toLowerCase(), fileNamePrefix, fileName);
+            return BitmapUtil.compressToFile(waterbmp, maxSize, compressFormat, bitmapConfig, quality, filename);
+        }
+
         return BitmapUtil.compressImage(context, Uri.fromFile(file), maxWidth, maxHeight, maxSize,
                 compressFormat, bitmapConfig, quality, destinationDirectoryPath,
                 fileNamePrefix, fileName);
@@ -210,5 +234,18 @@ public class CompressHelper {
         public CompressHelper build() {
             return mCompressHelper;
         }
+    }
+
+    private static String generateFilePath(Context context, String parentPath, Uri uri,
+                                           String extension, String prefix, String fileName) {
+        File file = new File(parentPath);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        /** if prefix is null, set prefix "" */
+        prefix = TextUtils.isEmpty(prefix) ? "" : prefix;
+        /** reset fileName by prefix and custom file name */
+        fileName = TextUtils.isEmpty(fileName) ? prefix + FileUtil.splitFileName(FileUtil.getFileName(context, uri))[0] : fileName;
+        return file.getAbsolutePath() + File.separator + fileName + "." + extension;
     }
 }
