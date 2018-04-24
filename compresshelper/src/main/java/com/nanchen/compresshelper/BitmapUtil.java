@@ -10,6 +10,8 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,7 +21,7 @@ import java.io.InputStream;
 
 /**
  * 图片处理工具类
- *
+ * <p>
  * Author: nanchen
  * Email: liushilin520@foxmail.com
  * Date: 2017-03-08  9:03
@@ -57,7 +59,7 @@ public class BitmapUtil {
         int actualHeight = options.outHeight;
         int actualWidth = options.outWidth;
 
-        if (actualHeight == -1 || actualWidth == -1){
+        if (actualHeight == -1 || actualWidth == -1) {
             try {
                 ExifInterface exifInterface = new ExifInterface(filePath);
                 actualHeight = exifInterface.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, ExifInterface.ORIENTATION_NORMAL);//获取图片的高度
@@ -69,10 +71,10 @@ public class BitmapUtil {
 
         if (actualWidth <= 0 || actualHeight <= 0) {
             Bitmap bitmap2 = BitmapFactory.decodeFile(filePath);
-            if (bitmap2 != null){
+            if (bitmap2 != null) {
                 actualWidth = bitmap2.getWidth();
                 actualHeight = bitmap2.getHeight();
-            }else{
+            } else {
                 return null;
             }
         }
@@ -123,7 +125,7 @@ public class BitmapUtil {
         } catch (OutOfMemoryError exception) {
             exception.printStackTrace();
         }
-        if (actualHeight <= 0 || actualWidth <= 0){
+        if (actualHeight <= 0 || actualWidth <= 0) {
             return null;
         }
 
@@ -175,7 +177,7 @@ public class BitmapUtil {
             out = new FileOutputStream(filename);
             // 通过文件名写入
             Bitmap newBmp = BitmapUtil.getScaledBitmap(context, imageUri, maxWidth, maxHeight, bitmapConfig);
-            if (newBmp != null){
+            if (newBmp != null) {
                 newBmp.compress(compressFormat, quality, out);
             }
 
@@ -183,6 +185,55 @@ public class BitmapUtil {
             e.printStackTrace();
         } finally {
             try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException ignored) {
+            }
+        }
+
+        return new File(filename);
+    }
+
+    static File compressImage(Context context, Uri imageUri, float maxWidth, float maxHeight, long maxSize,
+                              Bitmap.CompressFormat compressFormat, Bitmap.Config bitmapConfig,
+                              int quality, String parentPath, String prefix, String fileName) {
+        FileOutputStream out = null;
+        ByteArrayOutputStream baos = null;
+        ByteArrayInputStream bais = null;
+        String filename = generateFilePath(context, parentPath, imageUri, compressFormat.name().toLowerCase(), prefix, fileName);
+        try {
+            out = new FileOutputStream(filename);
+            // 通过文件名写入
+            Bitmap newBmp = BitmapUtil.getScaledBitmap(context, imageUri, maxWidth, maxHeight, bitmapConfig);
+            if (newBmp != null) {
+                //newBmp.compress(compressFormat, quality, out);
+                baos = new ByteArrayOutputStream();
+                newBmp.compress(compressFormat, quality, baos);
+                while (baos.toByteArray().length / 1024 > maxSize) {
+                    baos.reset();
+                    quality -= 5;
+                    newBmp.compress(compressFormat, quality, baos);
+                }
+
+                bais = new ByteArrayInputStream(baos.toByteArray());
+                Bitmap bitmap = BitmapFactory.decodeStream(bais);
+
+                bitmap.compress(compressFormat, quality, out);
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bais != null) {
+                    bais.close();
+                }
+
+                if (baos != null) {
+                    baos.close();
+                }
+
                 if (out != null) {
                     out.close();
                 }
