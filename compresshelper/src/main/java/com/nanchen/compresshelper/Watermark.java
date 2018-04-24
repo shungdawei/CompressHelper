@@ -8,10 +8,10 @@ import android.graphics.Color;
 
 public class Watermark {
     private String text;
-    private int textSize = 25;
+    private int textSize = 20;
     private int textColor = Color.RED;
-    private int top = 30;
-    private int left = 30;
+    private int top = 26;
+    private int left = 26;
 
     public Watermark() {
     }

@@ -15,7 +15,6 @@ import android.widget.Toast;
 
 import com.nanchen.compresshelper.CompressHelper;
 import com.nanchen.compresshelper.FileUtil;
-import com.nanchen.compresshelper.Watermark;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,17 +59,17 @@ public class MainActivity extends AppCompatActivity {
 
         newFile = compressHelper.compressToFile(oldFile);
 //        String yourFileName = "123.jpg";
-        Watermark watermark = new Watermark();
-        watermark.setText("姓名：张三德\n编号：100001\n2018-4-24 15:33:20");
-        watermark.setTextColor(Color.RED);
-        watermark.setTextSize(20);
-        watermark.setTop(26);
-        watermark.setLeft(26);
+//        Watermark watermark = new Watermark();
+//        watermark.setText("姓名：张三德\n编号：100001\n2018-4-24 15:33:20");
+//        watermark.setTextColor(Color.RED);
+//        watermark.setTextSize(20);
+//        watermark.setTop(26);
+//        watermark.setLeft(26);
 
         // 你也可以自定义压缩
         newFile = new CompressHelper.Builder(this)
                 .setMaxWidth(480)  // 默认最大宽度为720
-                .setMaxHeight(800) // 默认最大高度为960
+                .setMaxHeight(640) // 默认最大高度为960
                 .setQuality(80)    // 默认压缩质量为80
                 .setMaxSize(50)    // 默认压缩大小为100KB
                 .setCompressFormat(Bitmap.CompressFormat.JPEG) // 设置默认压缩为jpg格式
@@ -78,7 +77,8 @@ public class MainActivity extends AppCompatActivity {
                 .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_PICTURES).getAbsolutePath())
                 .build()
-                .compressToFileWithWatermark(oldFile, watermark);
+                .compressToFile(oldFile);
+                //.compressToFileWithWatermark(oldFile, new Watermark("姓名：张三德\n编号：100001\n2018-4-24 15:33:20"));
 
         mImageNew.setImageBitmap(BitmapFactory.decodeFile(newFile.getAbsolutePath()));
 
